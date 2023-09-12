@@ -17,4 +17,9 @@ code : {{department.getCode()}}
 <br>
 url : {{ url }}
 <br>
+villes: <ul>
+    {% for city in department.getCities() %}
+        <li>{{ city.getName() }}</li>
+    {% endfor %}
+</ul>
 {% endblock %}

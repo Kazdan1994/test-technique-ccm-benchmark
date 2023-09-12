@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\City;
 use App\Entity\Department;
 use App\Repository\Exception\DepartmentNotFound;
 
@@ -12,6 +13,8 @@ final class DepartmentRepository
 
     private $lastModified;
 
+    private $cityRepository;
+
     public function __construct(string $filePath)
     {
         $this->dataByCode = [];
@@ -21,7 +24,7 @@ final class DepartmentRepository
             $this->dataByCode[$row[0]] = [
                 'id' => $row[1],
                 'name' => $row[2],
-                'code' => $row[0]
+                'code' => $row[0],
             ];
         }
         $lms = filemtime($filePath);
@@ -29,6 +32,8 @@ final class DepartmentRepository
             throw new \RuntimeException('Could not read lastmod.');
         }
         $this->lastModified = \DateTimeImmutable::createFromFormat('U', $lms);
+
+        $this->cityRepository = new CityRepository(dirname(__FILE__) . '/../../db/cities.csv');
     }
 
 
@@ -44,6 +49,13 @@ final class DepartmentRepository
             $department->setId($this->dataByCode[$code]['id']);
             $department->setCode($this->dataByCode[$code]['code']);
             $department->setName($this->dataByCode[$code]['name']);
+            $cities = $this->cityRepository->fetchByDepartmentId($department->getId());
+
+            usort($cities, function(City $a, City $b) {
+                return strcmp($a->getName(), $b->getName());
+            });
+
+            $department->setCities($cities);
 
             return $department;
         }
