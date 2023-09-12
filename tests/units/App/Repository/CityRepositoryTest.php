@@ -1,24 +1,35 @@
 <?php
 
-namespace units\App\Repository;
+namespace App\Tests\units\App\Repository;
 
 use App\Repository\CityRepository;
+use App\Repository\CitySQLiteRepository;
 use PHPUnit\Framework\TestCase;
 
 class CityRepositoryTest extends TestCase
 {
-    private CityRepository $instance;
+    private CityRepository $cityRepository;
+    private CitySQLiteRepository $citySQLiteRepository;
 
     public function setUp(): void
     {
-        $this->instance = new CityRepository(dirname(__FILE__) . '/../../../../db/cities.csv');
+        $this->cityRepository = new CityRepository(dirname(__FILE__) . '/../../../../db/cities.csv');
+        $this->citySQLiteRepository = new CitySQLiteRepository(dirname(__FILE__) . '/../../../../db/cities.sqlite');
     }
 
     public function testFetchByDepartmentId()
     {
         $this->assertInstanceOf(
             CityRepository::class,
-            $this->instance
+            $this->cityRepository
+        );
+    }
+
+    public function testFetchByDepartmentIdWithSQLite()
+    {
+        $this->assertInstanceOf(
+            CitySQLiteRepository::class,
+            $this->citySQLiteRepository
         );
     }
 }
