@@ -63,6 +63,8 @@ final class DepartmentRepository
             $item = $department;
         });
 
+        asort($dataByCode);
+
         return $dataByCode;
     }
 
