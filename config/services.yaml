@@ -29,11 +29,11 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    
+
     App\Repository\DepartmentRepository:
         arguments:
             $filePath: '%kernel.project_dir%/db/departments.csv'
-    
+
     App\Repository\CityRepository:
         arguments:
             $filePath: '%kernel.project_dir%/db/cities.csv'
@@ -41,3 +41,9 @@ services:
     App\Repository\CitySQLiteRepository:
         arguments:
             $databaseFile: '%kernel.project_dir%/db/cities.sqlite'
+
+    app.city_repository:
+        class: App\Repository\CityRepository # or App\Repository\CitySQLiteRepository
+        arguments:
+            $filePath: '%kernel.project_dir%/db/cities.csv' # or $databaseFile: '%kernel.project_dir%/db/cities.sqlite'
+        public: true
