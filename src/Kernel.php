@@ -48,8 +48,6 @@ class Kernel extends BaseKernel
             2, 56, 345, 674, 234, 764, 543, 123, 324, 9, 78, 12, 94, 12, 50, 5, 13
         ];
 
-        $winners = [];
-
         // Create an array of all possible winners from 1 to 1000
         $possibleWinners = range(1, 1000);
 
