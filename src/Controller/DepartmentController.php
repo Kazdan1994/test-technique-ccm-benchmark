@@ -3,12 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\City;
-use App\Repository\CityRepository;
-use App\Repository\CitySQLiteRepository;
 use App\Repository\DepartmentRepository;
 use App\Repository\Exception\DepartmentNotFound;
 use App\Service\CityRepositoryFactory;
-use InvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\RouterInterface;
@@ -20,19 +19,33 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 
 final class DepartmentController extends AbstractController
 {
+    private $cache;
+    private $cityRepositoryFactory;
+
+    public function __construct(AdapterInterface $cache, CityRepositoryFactory $cityRepositoryFactory)
+    {
+        $this->cache = $cache;
+        $this->cityRepositoryFactory = $cityRepositoryFactory;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __invoke(
         Request              $request,
         DepartmentRepository $departmentRepository,
-        CityRepositoryFactory $cityRepositoryFactory,
         SluggerInterface     $slugger,
         RouterInterface      $router,
         TranslatorInterface  $translator
-    ): Response
-    {
-        $cityRepository = $cityRepositoryFactory->create();
+    ): Response {
+        $departmentCode = $request->get('code');
+        $cacheKey = 'department_' . $departmentCode;
 
         try {
-            $department = $departmentRepository->findOneByCode($request->get('code'));
+            // Try to get department data from cache
+            $department = $this->cache->get($cacheKey, function () use ($departmentRepository, $departmentCode) {
+                return $departmentRepository->findOneByCode($departmentCode);
+            });
         } catch (DepartmentNotFound $e) {
             throw new NotFoundHttpException();
         }
@@ -56,19 +69,21 @@ final class DepartmentController extends AbstractController
             return $this->redirect($trueUrl, Response::HTTP_MOVED_PERMANENTLY);
         }
 
-        $method = method_exists(
-            $cityRepository, 'fetchByDepartmentId'
-        ) ? 'fetchByDepartmentId' : 'findCitiesByDepartmentId';
+        // Define the cache key for department cities
+        $citiesCacheKey = 'department_cities_' . $departmentCode;
 
-        $cities = call_user_func([
-            $cityRepository,
-            $method
-        ],
-            $department->getId()
-        );
+        // Try to get cities data from cache
+        $cities = $this->cache->get($citiesCacheKey, function () use ($department, $translator) {
+            $cityRepository = $this->cityRepositoryFactory->create();
+            $method = method_exists($cityRepository, 'fetchByDepartmentId') ? 'fetchByDepartmentId' : 'findCitiesByDepartmentId';
 
-        usort($cities, function (City $a, City $b) {
-            return strcmp($a->getName(), $b->getName());
+            $cities = call_user_func([$cityRepository, $method], $department->getId());
+
+            usort($cities, function (City $a, City $b) {
+                return strcmp($a->getName(), $b->getName());
+            });
+
+            return $cities;
         });
 
         $viewParameters = [
