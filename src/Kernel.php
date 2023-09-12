@@ -50,30 +50,18 @@ class Kernel extends BaseKernel
 
         $winners = [];
 
-        $i = 0;
-        do {
-            $i++;
-            foreach ($losers as $loser) {
-                if ($i === $loser) {
-                    continue 2;
-                }
-                foreach ($winners as $winner) {
-                    if ($i === $winner) {
-                        continue 3;
-                    }
-                }
-            }
-            $winners[] = $i;
-        } while (count($winners) < 200 && $i < 1000);
+        // Create an array of all possible winners from 1 to 1000
+        $possibleWinners = range(1, 1000);
 
-        // Shuffle the array
-        usort(
-            $winners,
-            function($a, $b) {
-                return (mt_rand(0, 1) === 0 ? -1 : 1);
-            }
-        );
-        $winners = array_slice($winners, 0, 20);
+        // Remove losers from the array of possible winners
+        $possibleWinners = array_diff($possibleWinners, $losers);
+
+        // Shuffle the array of possible winners
+        shuffle($possibleWinners);
+
+        // Take the first 20 elements as winners
+        $winners = array_slice($possibleWinners, 0, 20);
+
 
         return new JsonResponse(['winners' => $winners]);
     }
