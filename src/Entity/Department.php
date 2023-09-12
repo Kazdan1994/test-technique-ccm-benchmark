@@ -14,11 +14,14 @@ final class Department
     /** @var string $code */
     private $code;
 
+    /** @var array $cities */
+    private $cities;
+
     public function setId(int $id):void
     {
         $this->id = $id;
     }
-    
+
     public function getId():int
     {
         return $this->id;
@@ -32,6 +35,16 @@ final class Department
     public function getName():string
     {
         return $this->name;
+    }
+
+    public function setCities(array $cities): void
+    {
+        $this->cities = $cities;
+    }
+
+    public function getCities(): array
+    {
+        return $this->cities;
     }
 
     public function setCode(string $code):void
