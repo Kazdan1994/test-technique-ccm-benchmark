@@ -49,13 +49,6 @@ final class DepartmentRepository
             $department->setId($this->dataByCode[$code]['id']);
             $department->setCode($this->dataByCode[$code]['code']);
             $department->setName($this->dataByCode[$code]['name']);
-            $cities = $this->cityRepository->fetchByDepartmentId($department->getId());
-
-            usort($cities, function(City $a, City $b) {
-                return strcmp($a->getName(), $b->getName());
-            });
-
-            $department->setCities($cities);
 
             return $department;
         }
